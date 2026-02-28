@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchMarketSignals, checkConnection } from '../services/dragonscope';
+import { fetchMarketSignals } from '../services/dragonscope';
 
 const POLL_INTERVAL = 120_000; // 2 minutes
 

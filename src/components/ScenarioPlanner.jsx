@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useStore, useScores } from '../store';
-import DOMAINS, { calcDomainScore } from '../data/domains';
+import DOMAINS from '../data/domains';
 import SCENARIOS from '../data/scenarios';
 import { useThreatLevel } from '../hooks/useThreatLevel';
 import { ThreatEnvironmentPanel, ScenarioThreatBadge, EffectiveRiskDisplay } from './ThreatEnvironment';
@@ -16,11 +16,13 @@ function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }) {
     readiness >= 70 ? 'text-emerald-400' :
     readiness >= 40 ? 'text-amber-400' :
                       'text-rose-400';
-  const severity = {
+  const severityMap = {
     critical: { label: 'Critical', cls: 'bg-rose-500/15 text-rose-400' },
     high: { label: 'High', cls: 'bg-amber-500/15 text-amber-400' },
     medium: { label: 'Medium', cls: 'bg-yellow-500/15 text-yellow-400' },
-  }[scenario.severity];
+    low: { label: 'Low', cls: 'bg-blue-500/15 text-blue-400' },
+  };
+  const severity = severityMap[scenario.severity] || severityMap.medium;
 
   // Effective risk = threat × (1 - readiness/100)
   const effectiveRisk = threat ? Math.round(threat.level * (1 - readiness / 100)) : null;

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useStore, useScores } from '../store';
 import DOMAINS, { getAllItems } from '../data/domains';
 import {
@@ -13,7 +13,7 @@ export default function Settings() {
   const [importStatus, setImportStatus] = useState(null);
   const fileRef = useRef(null);
 
-  const allItems = getAllItems();
+  const allItems = useMemo(() => getAllItems(), []);
   const completed = allItems.filter(i => state.checkedIds.has(i.id)).length;
 
   function handleExport() {
@@ -31,7 +31,9 @@ export default function Settings() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `readystate-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
 

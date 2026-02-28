@@ -107,7 +107,8 @@ function parseEconomic(data) {
     const vals = series.values || series.data || series;
     if (Array.isArray(vals) && vals.length > 0) {
       const last = vals[vals.length - 1];
-      return Number(last.value ?? last.v ?? last) || null;
+      const num = Number(last.value ?? last.v ?? last);
+      return Number.isFinite(num) ? num : null;
     }
     return null;
   };

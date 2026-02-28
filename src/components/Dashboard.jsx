@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useStore, useScores } from '../store';
-import DOMAINS, { calcDomainScore, getAllItems } from '../data/domains';
+import DOMAINS, { getAllItems } from '../data/domains';
 import ReadinessGauge from './ReadinessGauge';
 import DomainRadarChart from './RadarChart';
 import ActionItems from './ActionItems';
 import { ThreatEnvironmentCard } from './ThreatEnvironment';
 import {
-  TrendingUp, TrendingDown, Minus, ArrowRight, CheckCircle, Clock,
+  TrendingUp, ArrowRight, CheckCircle, Clock,
   BarChart3,
 } from 'lucide-react';
 import {

@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useReducer, useEffect, useMemo } from 'react';
 import DOMAINS, { calcDomainScore, calcOverallScore } from './data/domains';
 
 const STORAGE_KEY = 'readystate-data';
