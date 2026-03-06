@@ -4,12 +4,21 @@ import DOMAINS from '../data/domains';
 import SCENARIOS from '../data/scenarios';
 import { useThreatLevel } from '../hooks/useThreatLevel';
 import { ThreatEnvironmentPanel, ScenarioThreatBadge, EffectiveRiskDisplay } from './ThreatEnvironment';
+import type { Scenario, ThreatData, DomainScores } from '../types';
 import {
-  ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Info,
-  ArrowRight, Shield, Activity,
+  ChevronLeft, AlertCircle, CheckCircle2, Info,
+  Shield, Activity,
 } from 'lucide-react';
 
-function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }) {
+interface ScenarioCardProps {
+  scenario: Scenario;
+  readiness: number;
+  onClick: () => void;
+  isSelected: boolean;
+  threats: ThreatData | null;
+}
+
+function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }: ScenarioCardProps) {
   const Icon = scenario.icon;
   const threat = threats?.scenarios?.[scenario.id];
   const scoreColor =
@@ -21,10 +30,9 @@ function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }) {
     high: { label: 'High', cls: 'bg-amber-500/15 text-amber-400' },
     medium: { label: 'Medium', cls: 'bg-yellow-500/15 text-yellow-400' },
     low: { label: 'Low', cls: 'bg-blue-500/15 text-blue-400' },
-  };
-  const severity = severityMap[scenario.severity] || severityMap.medium;
+  } as const;
+  const severity = severityMap[scenario.severity];
 
-  // Effective risk = threat × (1 - readiness/100)
   const effectiveRisk = threat ? Math.round(threat.level * (1 - readiness / 100)) : null;
 
   return (
@@ -32,9 +40,11 @@ function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }) {
       onClick={onClick}
       className={`
         card-hover p-5 text-left w-full transition-all duration-200
-        ${isSelected ? 'ring-2 ring-offset-0 ring-slate-500' : ''}
+        ${isSelected ? 'ring-2 ring-offset-0 ring-th-border-alt' : ''}
       `}
       style={isSelected ? { borderColor: scenario.color + '40' } : undefined}
+      aria-pressed={isSelected}
+      aria-label={`${scenario.name}: ${readiness}% ready`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: scenario.color + '15' }}>
@@ -42,17 +52,17 @@ function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }) {
         </div>
         <div className="text-right">
           <span className={`text-2xl font-bold score-label ${scoreColor}`}>{readiness}%</span>
-          <div className="text-[10px] text-slate-500">Ready</div>
+          <div className="text-[10px] text-th-faint">Ready</div>
         </div>
       </div>
-      <h3 className="text-sm font-semibold text-white mb-1">{scenario.name}</h3>
-      <p className="text-xs text-slate-500 mb-2 line-clamp-2">{scenario.description}</p>
+      <h3 className="text-sm font-semibold text-th-heading mb-1">{scenario.name}</h3>
+      <p className="text-xs text-th-faint mb-2 line-clamp-2">{scenario.description}</p>
       <div className="flex items-center gap-2 flex-wrap">
         <span className={`badge ${severity.cls}`}>{severity.label} Severity</span>
         <ScenarioThreatBadge scenarioId={scenario.id} threats={threats} />
       </div>
-      {effectiveRisk != null && (
-        <div className="mt-2 pt-2 border-t border-slate-800/30">
+      {effectiveRisk != null && threat && (
+        <div className="mt-2 pt-2 border-t border-th-border/30">
           <EffectiveRiskDisplay readiness={readiness} threatLevel={threat.level} />
         </div>
       )}
@@ -60,10 +70,15 @@ function ScenarioCard({ scenario, readiness, onClick, isSelected, threats }) {
   );
 }
 
-function ScenarioDetail({ scenario, domainScores, checkedIds }) {
+interface ScenarioDetailProps {
+  scenario: Scenario;
+  domainScores: DomainScores;
+  checkedIds: Set<string>;
+}
+
+function ScenarioDetail({ scenario, domainScores, checkedIds }: ScenarioDetailProps) {
   const Icon = scenario.icon;
 
-  // Calculate weighted readiness
   const readiness = useMemo(() => {
     let total = 0;
     for (const [domainId, impact] of Object.entries(scenario.impacts)) {
@@ -74,7 +89,6 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
     return Math.round(total);
   }, [scenario, domainScores]);
 
-  // Sort impacts by weight descending
   const sortedImpacts = useMemo(() => {
     return Object.entries(scenario.impacts)
       .filter(([, v]) => v.weight > 0)
@@ -85,7 +99,6 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
       });
   }, [scenario, domainScores]);
 
-  // Critical items status
   const criticalItems = useMemo(() => {
     return scenario.criticalItems.map(itemId => {
       for (const domain of DOMAINS) {
@@ -103,7 +116,7 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
         }
       }
       return null;
-    }).filter(Boolean);
+    }).filter((item): item is NonNullable<typeof item> => item !== null);
   }, [scenario, checkedIds]);
 
   const criticalDone = criticalItems.filter(i => i.completed).length;
@@ -117,21 +130,20 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
             <Icon className="w-6 h-6" style={{ color: scenario.color }} />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">{scenario.name}</h2>
-            <p className="text-sm text-slate-400">{scenario.description}</p>
+            <h2 className="text-xl font-bold text-th-heading">{scenario.name}</h2>
+            <p className="text-sm text-th-muted">{scenario.description}</p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-black text-white score-label">{readiness}%</div>
-            <div className="text-xs text-slate-500">Readiness</div>
+            <div className="text-3xl font-black text-th-heading score-label">{readiness}%</div>
+            <div className="text-xs text-th-faint">Readiness</div>
           </div>
         </div>
 
-        {/* Impact breakdown */}
         <div className="space-y-2">
-          {sortedImpacts.map(({ domain, impact, score }) => (
+          {sortedImpacts.map(({ domain, impact, score }) => domain && (
             <div key={domain.id} className="flex items-center gap-3">
-              <span className="text-xs text-slate-400 w-20 text-right">{domain.name}</span>
-              <div className="flex-1 progress-track">
+              <span className="text-xs text-th-muted w-20 text-right">{domain.name}</span>
+              <div className="flex-1 progress-track" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
                 <div
                   className="progress-fill"
                   style={{
@@ -141,8 +153,8 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
                   }}
                 />
               </div>
-              <span className="text-xs text-slate-400 w-8 text-right score-label">{score}%</span>
-              <span className="text-[10px] text-slate-600 w-12 text-right">
+              <span className="text-xs text-th-muted w-8 text-right score-label">{score}%</span>
+              <span className="text-[10px] text-th-faint w-12 text-right">
                 {Math.round(impact.weight * 100)}% wt
               </span>
             </div>
@@ -154,10 +166,10 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
       <div className="card p-6">
         <div className="flex items-center gap-2 mb-4">
           <AlertCircle className="w-4 h-4 text-rose-400" />
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">
+          <h3 className="text-sm font-semibold text-th-body uppercase tracking-wide">
             Critical Items for This Scenario
           </h3>
-          <span className="ml-auto text-xs text-slate-500">
+          <span className="ml-auto text-xs text-th-faint">
             {criticalDone}/{criticalItems.length} ready
           </span>
         </div>
@@ -168,7 +180,7 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
                 ? <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 : <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
               }
-              <span className={`text-sm ${item.completed ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
+              <span className={`text-sm ${item.completed ? 'text-th-faint line-through' : 'text-th-body'}`}>
                 {item.text}
               </span>
               <span
@@ -184,7 +196,7 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
       <div className="card p-6">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-4 h-4 text-blue-400" />
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Expert Tips</h3>
+          <h3 className="text-sm font-semibold text-th-body uppercase tracking-wide">Expert Tips</h3>
         </div>
         <div className="space-y-3">
           {scenario.tips.map((tip, i) => (
@@ -192,7 +204,7 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
               <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-bold text-blue-400">{i + 1}</span>
               </div>
-              <p className="text-sm text-slate-300 leading-relaxed">{tip}</p>
+              <p className="text-sm text-th-body leading-relaxed">{tip}</p>
             </div>
           ))}
         </div>
@@ -201,7 +213,12 @@ function ScenarioDetail({ scenario, domainScores, checkedIds }) {
   );
 }
 
-function LiveThreatSignals({ scenarioId, threats }) {
+interface LiveThreatSignalsProps {
+  scenarioId: string;
+  threats: ThreatData | null;
+}
+
+function LiveThreatSignals({ scenarioId, threats }: LiveThreatSignalsProps) {
   const threat = threats?.scenarios?.[scenarioId];
   if (!threat) return null;
 
@@ -209,7 +226,7 @@ function LiveThreatSignals({ scenarioId, threats }) {
     <div className="card p-5 animate-in">
       <div className="flex items-center gap-2 mb-3">
         <Activity className="w-4 h-4 text-blue-400" />
-        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Live Threat Signals</h3>
+        <h3 className="text-sm font-semibold text-th-body uppercase tracking-wide">Live Threat Signals</h3>
         <span className={`ml-auto text-sm font-bold score-label ${
           threat.level >= 55 ? 'text-rose-400' :
           threat.level >= 35 ? 'text-amber-400' :
@@ -226,9 +243,9 @@ function LiveThreatSignals({ scenarioId, threats }) {
                 ? 'bg-rose-400'
                 : sig.includes('moderate') || sig.includes('rising') || sig.includes('elevated')
                 ? 'bg-amber-400'
-                : 'bg-slate-500'
+                : 'bg-th-faint'
             }`} />
-            <span className="text-slate-400">{sig}</span>
+            <span className="text-th-muted">{sig}</span>
           </div>
         ))}
       </div>
@@ -240,10 +257,10 @@ export default function ScenarioPlanner() {
   const { state, dispatch } = useStore();
   const { domainScores } = useScores();
   const { threats } = useThreatLevel();
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const scenarioReadiness = useMemo(() => {
-    const map = {};
+    const map: Record<string, number> = {};
     for (const s of SCENARIOS) {
       let total = 0;
       for (const [domainId, impact] of Object.entries(s.impacts)) {
@@ -260,26 +277,23 @@ export default function ScenarioPlanner() {
 
   return (
     <div className="space-y-6 animate-fade">
-      {/* Back */}
       <button
         onClick={() => dispatch({ type: 'NAVIGATE', view: 'dashboard' })}
-        className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+        className="flex items-center gap-1 text-sm text-th-muted hover:text-th-heading transition-colors"
       >
         <ChevronLeft className="w-4 h-4" />
         Dashboard
       </button>
 
-      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-white mb-1">Scenario Planner</h2>
-        <p className="text-sm text-slate-400">
+        <h2 className="text-2xl font-bold text-th-heading mb-1">Scenario Planner</h2>
+        <p className="text-sm text-th-muted">
           How prepared are you for specific crisis scenarios?
           {threats ? ' Live market data is adjusting threat levels in real-time.' : ' Select one to see a detailed breakdown.'}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Scenario Grid — wider */}
         <div className="lg:col-span-2">
           <div className="grid grid-cols-2 gap-3">
             {SCENARIOS.map(s => (
@@ -295,12 +309,9 @@ export default function ScenarioPlanner() {
           </div>
         </div>
 
-        {/* Detail Panel */}
         <div className="lg:col-span-3 space-y-4">
-          {/* Market Intelligence Panel */}
           <ThreatEnvironmentPanel />
 
-          {/* Live signals for selected scenario */}
           {selectedId && <LiveThreatSignals scenarioId={selectedId} threats={threats} />}
 
           {selectedScenario ? (
@@ -311,9 +322,9 @@ export default function ScenarioPlanner() {
             />
           ) : (
             <div className="card p-12 flex flex-col items-center justify-center text-center min-h-[200px]">
-              <Info className="w-10 h-10 text-slate-700 mb-3" />
-              <h3 className="text-lg font-semibold text-slate-400 mb-1">Select a Scenario</h3>
-              <p className="text-sm text-slate-500 max-w-xs">
+              <Info className="w-10 h-10 text-th-faint mb-3" />
+              <h3 className="text-lg font-semibold text-th-muted mb-1">Select a Scenario</h3>
+              <p className="text-sm text-th-faint max-w-xs">
                 Click on any scenario card to see how your current preparedness stacks up against that specific threat.
               </p>
             </div>

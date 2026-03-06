@@ -1,14 +1,15 @@
 import {
   DollarSign, Package, Shield, Heart, Wrench, Users,
 } from 'lucide-react';
+import type { Domain, FlatItem, ActionItem } from '../types';
 
-const DOMAINS = [
+const DOMAINS: Domain[] = [
   {
     id: 'financial',
     name: 'Financial',
     icon: DollarSign,
-    color: '#10b981',        // emerald-500
-    colorLight: '#d1fae5',   // emerald-100
+    color: '#10b981',
+    colorLight: '#d1fae5',
     colorBg: 'rgba(16,185,129,0.10)',
     description: 'Emergency funds, insurance, debt management, and income resilience.',
     categories: [
@@ -51,8 +52,8 @@ const DOMAINS = [
     id: 'supplies',
     name: 'Supplies',
     icon: Package,
-    color: '#f59e0b',        // amber-500
-    colorLight: '#fef3c7',   // amber-100
+    color: '#f59e0b',
+    colorLight: '#fef3c7',
     colorBg: 'rgba(245,158,11,0.10)',
     description: 'Food, water, medical supplies, tools, and essential documents.',
     categories: [
@@ -96,8 +97,8 @@ const DOMAINS = [
     id: 'digital',
     name: 'Digital',
     icon: Shield,
-    color: '#3b82f6',        // blue-500
-    colorLight: '#dbeafe',   // blue-100
+    color: '#3b82f6',
+    colorLight: '#dbeafe',
     colorBg: 'rgba(59,130,246,0.10)',
     description: 'Data backups, passwords, 2FA, account recovery, and digital security.',
     categories: [
@@ -134,8 +135,8 @@ const DOMAINS = [
     id: 'health',
     name: 'Health',
     icon: Heart,
-    color: '#f43f5e',        // rose-500
-    colorLight: '#ffe4e6',   // rose-100
+    color: '#f43f5e',
+    colorLight: '#ffe4e6',
     colorBg: 'rgba(244,63,94,0.10)',
     description: 'Medical records, fitness baseline, mental health, and health awareness.',
     categories: [
@@ -171,8 +172,8 @@ const DOMAINS = [
     id: 'skills',
     name: 'Skills',
     icon: Wrench,
-    color: '#8b5cf6',        // violet-500
-    colorLight: '#ede9fe',   // violet-100
+    color: '#8b5cf6',
+    colorLight: '#ede9fe',
     colorBg: 'rgba(139,92,246,0.10)',
     description: 'First aid, basic repairs, navigation, communication, and adaptability.',
     categories: [
@@ -209,8 +210,8 @@ const DOMAINS = [
     id: 'network',
     name: 'Network',
     icon: Users,
-    color: '#06b6d4',        // cyan-500
-    colorLight: '#cffafe',   // cyan-100
+    color: '#06b6d4',
+    colorLight: '#cffafe',
     colorBg: 'rgba(6,182,212,0.10)',
     description: 'Emergency contacts, community ties, communication plans, and mutual aid.',
     categories: [
@@ -247,8 +248,8 @@ const DOMAINS = [
 export default DOMAINS;
 
 /** Flatten all items across all domains */
-export function getAllItems() {
-  const items = [];
+export function getAllItems(): FlatItem[] {
+  const items: FlatItem[] = [];
   for (const domain of DOMAINS) {
     for (const cat of domain.categories) {
       for (const item of cat.items) {
@@ -260,7 +261,7 @@ export function getAllItems() {
 }
 
 /** Calculate score for a single domain given checked item IDs */
-export function calcDomainScore(domain, checkedIds) {
+export function calcDomainScore(domain: Domain, checkedIds: Set<string>): number {
   let earned = 0;
   let total = 0;
   for (const cat of domain.categories) {
@@ -273,21 +274,21 @@ export function calcDomainScore(domain, checkedIds) {
 }
 
 /** Calculate overall score */
-export function calcOverallScore(domains, checkedIds) {
+export function calcOverallScore(domains: Domain[], checkedIds: Set<string>): number {
   if (domains.length === 0) return 0;
   const scores = domains.map(d => calcDomainScore(d, checkedIds));
   return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 }
 
 /** Get prioritized action items (highest weight unchecked items from weakest domains) */
-export function getActionItems(domains, checkedIds, limit = 8) {
+export function getActionItems(domains: Domain[], checkedIds: Set<string>, limit = 8): ActionItem[] {
   const domainScores = domains.map(d => ({
     domain: d,
     score: calcDomainScore(d, checkedIds),
   }));
   domainScores.sort((a, b) => a.score - b.score);
 
-  const actions = [];
+  const actions: ActionItem[] = [];
   for (const { domain } of domainScores) {
     for (const cat of domain.categories) {
       for (const item of cat.items) {

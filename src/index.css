@@ -3,9 +3,44 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light theme tokens (RGB triplets for Tailwind alpha support) */
+    --c-page: 248 250 252;       /* slate-50 */
+    --c-card: 255 255 255;       /* white */
+    --c-card-alt: 241 245 249;   /* slate-100 */
+    --c-input: 241 245 249;      /* slate-100 */
+    --c-heading: 15 23 42;       /* slate-900 */
+    --c-body: 51 65 85;          /* slate-700 */
+    --c-muted: 100 116 139;      /* slate-500 */
+    --c-faint: 148 163 184;      /* slate-400 */
+    --c-border: 226 232 240;     /* slate-200 */
+    --c-border-alt: 203 213 225; /* slate-300 */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-glow-emerald: 0 1px 3px rgba(16, 185, 129, 0.1);
+    --shadow-glow-amber: 0 1px 3px rgba(245, 158, 11, 0.1);
+    --shadow-glow-rose: 0 1px 3px rgba(244, 63, 94, 0.1);
+  }
+
+  .dark {
+    --c-page: 2 6 23;            /* surface-950 */
+    --c-card: 15 23 42;          /* surface-900 */
+    --c-card-alt: 22 32 50;      /* surface-850 */
+    --c-input: 30 41 59;         /* surface-800 */
+    --c-heading: 248 250 252;    /* slate-50 */
+    --c-body: 203 213 225;       /* slate-300 */
+    --c-muted: 148 163 184;      /* slate-400 */
+    --c-faint: 100 116 139;      /* slate-500 */
+    --c-border: 30 41 59;        /* slate-800 */
+    --c-border-alt: 51 65 85;    /* slate-700 */
+    --shadow-card: none;
+    --shadow-glow-emerald: 0 0 40px -10px rgba(16, 185, 129, 0.25);
+    --shadow-glow-amber: 0 0 40px -10px rgba(245, 158, 11, 0.25);
+    --shadow-glow-rose: 0 0 40px -10px rgba(244, 63, 94, 0.25);
+  }
+
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 139, 0.3) transparent;
+    scrollbar-color: rgb(var(--c-muted) / 0.3) transparent;
   }
   *::-webkit-scrollbar {
     width: 6px;
@@ -15,20 +50,21 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background: rgba(100, 116, 139, 0.3);
+    background: rgb(var(--c-muted) / 0.3);
     border-radius: 3px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background: rgba(100, 116, 139, 0.5);
+    background: rgb(var(--c-muted) / 0.5);
   }
 }
 
 @layer components {
   .card {
-    @apply bg-surface-900/80 backdrop-blur-sm border border-slate-800/60 rounded-2xl;
+    @apply bg-th-card/80 backdrop-blur-sm border border-th-border/60 rounded-2xl;
+    box-shadow: var(--shadow-card);
   }
   .card-hover {
-    @apply card transition-all duration-200 hover:border-slate-700/60 hover:shadow-lg hover:shadow-black/20;
+    @apply card transition-all duration-200 hover:border-th-border-alt/60 hover:shadow-lg;
   }
   .btn-primary {
     @apply px-4 py-2 rounded-xl font-medium text-sm
@@ -37,7 +73,7 @@
   }
   .btn-ghost {
     @apply px-4 py-2 rounded-xl font-medium text-sm
-           text-slate-300 hover:text-white hover:bg-slate-800/60
+           text-th-body hover:text-th-heading hover:bg-th-card-alt/60
            transition-colors duration-150 active:scale-[0.98];
   }
   .badge {
@@ -47,18 +83,18 @@
     font-variant-numeric: tabular-nums;
   }
   .glow-emerald {
-    box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.25);
+    box-shadow: var(--shadow-glow-emerald);
   }
   .glow-amber {
-    box-shadow: 0 0 40px -10px rgba(245, 158, 11, 0.25);
+    box-shadow: var(--shadow-glow-amber);
   }
   .glow-rose {
-    box-shadow: 0 0 40px -10px rgba(244, 63, 94, 0.25);
+    box-shadow: var(--shadow-glow-rose);
   }
 
   /* Animated check */
   .check-item input[type="checkbox"] {
-    @apply rounded border-slate-600 bg-slate-800 text-emerald-500
+    @apply rounded border-th-border-alt bg-th-input text-emerald-500
            focus:ring-emerald-500/30 focus:ring-offset-0 focus:ring-2
            transition-all duration-150 cursor-pointer;
   }
@@ -68,7 +104,7 @@
 
   /* Progress bar */
   .progress-track {
-    @apply h-2 rounded-full bg-slate-800;
+    @apply h-2 rounded-full bg-th-input;
   }
   .progress-fill {
     @apply h-2 rounded-full transition-all duration-700 ease-out;

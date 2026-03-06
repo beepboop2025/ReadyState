@@ -1,6 +1,6 @@
 /**
  * DragonScope Integration Service
- * Connects ReadyState to DragonScope's market data API (port 3456).
+ * Connects ReadyState to DragonScope's market data API.
  * Provides economic indicators, sentiment, and volatility data for
  * dynamic threat level computation.
  *
@@ -8,14 +8,16 @@
  * so ReadyState works standalone with static threat levels.
  */
 
-const DS_BASE = 'http://localhost:3456';
-const FETCH_TIMEOUT = 5000;
-const CACHE_TTL = 60_000; // 1 minute
+import { DRAGONSCOPE_URL, FETCH_TIMEOUT, CACHE_TTL } from '../config';
+import type {
+  MarketSignals, EconomicData, FearGreedData, BondsData,
+  CommoditiesData, CryptoData, SentimentData, NewsSignals,
+} from '../types';
 
 // In-memory cache
-const cache = new Map();
+const cache = new Map<string, { data: unknown; ts: number }>();
 
-async function fetchDS(category) {
+async function fetchDS(category: string): Promise<unknown | null> {
   const cached = cache.get(category);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
     return cached.data;
@@ -25,11 +27,11 @@ async function fetchDS(category) {
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
   try {
-    const res = await fetch(`${DS_BASE}/${category}.json`, {
+    const res = await fetch(`${DRAGONSCOPE_URL}/${category}.json`, {
       signal: controller.signal,
     });
     if (!res.ok) return null;
-    const data = await res.json();
+    const data: unknown = await res.json();
     cache.set(category, { data, ts: Date.now() });
     return data;
   } catch {
@@ -39,21 +41,18 @@ async function fetchDS(category) {
   }
 }
 
-/**
- * Check if DragonScope is reachable
- */
-export async function checkConnection() {
+/** Check if DragonScope is reachable */
+export async function checkConnection(): Promise<boolean> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`${DS_BASE}/api/health`, { signal: controller.signal }).catch(() => null);
+    const res = await fetch(`${DRAGONSCOPE_URL}/api/health`, { signal: controller.signal }).catch(() => null);
     clearTimeout(timer);
-    // dataServer doesn't have /api/health, so try fetching _stats.json
     if (res && res.ok) return true;
 
     const controller2 = new AbortController();
     const timer2 = setTimeout(() => controller2.abort(), 3000);
-    const res2 = await fetch(`${DS_BASE}/_stats.json`, { signal: controller2.signal });
+    const res2 = await fetch(`${DRAGONSCOPE_URL}/_stats.json`, { signal: controller2.signal });
     clearTimeout(timer2);
     return res2.ok;
   } catch {
@@ -65,7 +64,7 @@ export async function checkConnection() {
  * Fetch all market signals needed for threat level computation.
  * Returns a structured object or null if DragonScope is offline.
  */
-export async function fetchMarketSignals() {
+export async function fetchMarketSignals(): Promise<MarketSignals | null> {
   const [economic, fearGreed, bonds, commodities, cryptoGlobal, redditSentiment, news, stats] =
     await Promise.all([
       fetchDS('economic'),
@@ -78,7 +77,6 @@ export async function fetchMarketSignals() {
       fetchDS('_stats'),
     ]);
 
-  // If nothing came back, DragonScope is offline
   const hasAny = [economic, fearGreed, bonds, commodities, cryptoGlobal].some(Boolean);
   if (!hasAny) return null;
 
@@ -90,18 +88,17 @@ export async function fetchMarketSignals() {
     crypto: parseCrypto(cryptoGlobal),
     sentiment: parseSentiment(redditSentiment),
     newsSignals: parseNews(news),
-    lastCollected: stats?.lastRun || null,
+    lastCollected: (stats as Record<string, string> | null)?.lastRun || null,
     fetchedAt: Date.now(),
   };
 }
 
 // ─── Parsers (extract threat-relevant signals) ────────────────────
 
-function parseEconomic(data) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function parseEconomic(data: any): EconomicData | null {
   if (!data) return null;
-  // The collector stores economic data as { series_id: { values: [...], meta } }
-  // Or it may be an array format. Handle both.
-  const extract = (key) => {
+  const extract = (key: string): number | null => {
     const series = data[key] || data[key?.toUpperCase()];
     if (!series) return null;
     const vals = series.values || series.data || series;
@@ -123,9 +120,8 @@ function parseEconomic(data) {
   };
 }
 
-function parseFearGreed(data) {
+function parseFearGreed(data: any): FearGreedData | null {
   if (!data) return null;
-  // CoinGecko / Alternative.me format
   const val = data.data?.[0]?.value ?? data.value ?? data.fear_greed_value;
   const classification = data.data?.[0]?.value_classification ?? data.classification ?? '';
   return {
@@ -134,10 +130,9 @@ function parseFearGreed(data) {
   };
 }
 
-function parseBonds(data) {
+function parseBonds(data: any): BondsData | null {
   if (!data) return null;
-  // Yield curve: look for 2Y and 10Y spreads
-  const yields = {};
+  const yields: Record<string, number> = {};
   if (Array.isArray(data)) {
     for (const bond of data) {
       const maturity = bond.maturity || bond.name || '';
@@ -147,8 +142,7 @@ function parseBonds(data) {
       if (maturity.includes('30') && maturity.toLowerCase().includes('y')) yields['30Y'] = value;
     }
   } else if (data && typeof data === 'object') {
-    // Object format { "DGS2": { values: [...] }, "DGS10": {...} }
-    for (const [key, series] of Object.entries(data)) {
+    for (const [key, series] of Object.entries(data) as [string, any][]) {
       const vals = series.values || series.data || [];
       const last = vals[vals.length - 1];
       const value = Number(last?.value ?? last) || 0;
@@ -166,16 +160,16 @@ function parseBonds(data) {
   };
 }
 
-function parseCommodities(data) {
+function parseCommodities(data: any): CommoditiesData | null {
   if (!data) return null;
-  const prices = {};
+  const prices: CommoditiesData = {};
   if (Array.isArray(data)) {
     for (const item of data) {
       const name = (item.name || item.commodity || '').toLowerCase();
       prices[name] = Number(item.price ?? item.value) || 0;
     }
   } else if (data && typeof data === 'object') {
-    for (const [key, series] of Object.entries(data)) {
+    for (const [key, series] of Object.entries(data) as [string, any][]) {
       const vals = series.values || series.data || [];
       const last = vals[vals.length - 1];
       prices[key.toLowerCase()] = Number(last?.value ?? last) || 0;
@@ -184,7 +178,7 @@ function parseCommodities(data) {
   return prices;
 }
 
-function parseCrypto(data) {
+function parseCrypto(data: any): CryptoData | null {
   if (!data) return null;
   const d = data.data || data;
   return {
@@ -195,9 +189,8 @@ function parseCrypto(data) {
   };
 }
 
-function parseSentiment(data) {
+function parseSentiment(data: any): SentimentData | null {
   if (!data) return null;
-  // Reddit sentiment format: { overall: { bullish, bearish, neutral }, posts: [...] }
   if (data.overall) {
     return {
       bullish: data.overall.bullish || 0,
@@ -205,7 +198,6 @@ function parseSentiment(data) {
       neutral: data.overall.neutral || 0,
     };
   }
-  // Array of posts with sentiment
   if (Array.isArray(data)) {
     let bullish = 0, bearish = 0, neutral = 0;
     for (const post of data) {
@@ -224,10 +216,9 @@ function parseSentiment(data) {
   return null;
 }
 
-function parseNews(data) {
+function parseNews(data: any): NewsSignals | null {
   if (!data) return null;
-  // Count crisis-related keywords in headlines
-  const keywords = {
+  const keywords: Record<string, number> = {
     recession: 0, layoff: 0, crash: 0, crisis: 0, war: 0,
     inflation: 0, default: 0, bankruptcy: 0, hack: 0, breach: 0,
     pandemic: 0, outbreak: 0, storm: 0, earthquake: 0, flood: 0,
@@ -249,10 +240,9 @@ function parseNews(data) {
 
   return { keywordCounts: keywords, crisisScore };
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
-/**
- * Invalidate cache (force fresh fetch on next call)
- */
-export function clearCache() {
+/** Invalidate cache (force fresh fetch on next call) */
+export function clearCache(): void {
   cache.clear();
 }

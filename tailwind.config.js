@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -16,6 +17,18 @@ export default {
           850: '#162032',
           900: '#0f172a',
           950: '#020617',
+        },
+        th: {
+          page: 'rgb(var(--c-page) / <alpha-value>)',
+          card: 'rgb(var(--c-card) / <alpha-value>)',
+          'card-alt': 'rgb(var(--c-card-alt) / <alpha-value>)',
+          input: 'rgb(var(--c-input) / <alpha-value>)',
+          heading: 'rgb(var(--c-heading) / <alpha-value>)',
+          body: 'rgb(var(--c-body) / <alpha-value>)',
+          muted: 'rgb(var(--c-muted) / <alpha-value>)',
+          faint: 'rgb(var(--c-faint) / <alpha-value>)',
+          border: 'rgb(var(--c-border) / <alpha-value>)',
+          'border-alt': 'rgb(var(--c-border-alt) / <alpha-value>)',
         },
       },
       animation: {

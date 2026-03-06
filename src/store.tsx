@@ -1,47 +1,60 @@
-import { createContext, useContext, useReducer, useEffect, useMemo } from 'react';
+import { createContext, useContext, useReducer, useEffect, useMemo, type ReactNode } from 'react';
 import DOMAINS, { calcDomainScore, calcOverallScore } from './data/domains';
+import { STORAGE_KEY, HISTORY_MAX_DAYS } from './config';
+import type { AppState, AppAction, SerializedState, StoreContextValue, ScoresResult } from './types';
 
-const STORAGE_KEY = 'readystate-data';
+const StoreContext = createContext<StoreContextValue | null>(null);
 
-const StoreContext = createContext(null);
-
-function loadState() {
+function loadState(): AppState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw);
+    const parsed: SerializedState = JSON.parse(raw);
     return {
-      ...parsed,
       checkedIds: new Set(parsed.checkedIds || []),
+      currentView: parsed.currentView || 'dashboard',
+      sidebarOpen: parsed.sidebarOpen || false,
+      userName: parsed.userName || '',
+      householdSize: parsed.householdSize || 1,
+      lastUpdated: parsed.lastUpdated || null,
+      completionHistory: parsed.completionHistory || [],
+      theme: parsed.theme || 'dark',
     };
   } catch {
     return null;
   }
 }
 
-function saveState(state) {
+function saveState(state: AppState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      ...state,
+    const serialized: SerializedState = {
       checkedIds: [...state.checkedIds],
-    }));
+      currentView: state.currentView,
+      sidebarOpen: state.sidebarOpen,
+      userName: state.userName,
+      householdSize: state.householdSize,
+      lastUpdated: state.lastUpdated,
+      completionHistory: state.completionHistory,
+      theme: state.theme,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
   } catch {
     // QuotaExceededError — silently fail
   }
 }
 
-const defaultState = {
+const defaultState: AppState = {
   checkedIds: new Set(),
-  currentView: 'dashboard',      // dashboard | domain:<id> | scenarios | settings
+  currentView: 'dashboard',
   sidebarOpen: false,
   userName: '',
   householdSize: 1,
   lastUpdated: null,
-  completionHistory: [],          // [{ date, score }] — daily snapshots
+  completionHistory: [],
   theme: 'dark',
 };
 
-function reducer(state, action) {
+function reducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'TOGGLE_ITEM': {
       const next = new Set(state.checkedIds);
@@ -69,7 +82,7 @@ function reducer(state, action) {
       const existing = state.completionHistory.filter(h => h.date !== today);
       return {
         ...state,
-        completionHistory: [...existing, { date: today, score: action.score }].slice(-90),
+        completionHistory: [...existing, { date: today, score: action.score }].slice(-HISTORY_MAX_DAYS),
       };
     }
     case 'IMPORT_DATA':
@@ -85,7 +98,11 @@ function reducer(state, action) {
   }
 }
 
-export function StoreProvider({ children }) {
+interface StoreProviderProps {
+  children: ReactNode;
+}
+
+export function StoreProvider({ children }: StoreProviderProps) {
   const saved = useMemo(() => loadState(), []);
   const [state, dispatch] = useReducer(reducer, saved || defaultState);
 
@@ -109,16 +126,16 @@ export function StoreProvider({ children }) {
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
-export function useStore() {
+export function useStore(): StoreContextValue {
   const ctx = useContext(StoreContext);
   if (!ctx) throw new Error('useStore must be used within StoreProvider');
   return ctx;
 }
 
-export function useScores() {
+export function useScores(): ScoresResult {
   const { state } = useStore();
   return useMemo(() => {
-    const domainScores = {};
+    const domainScores: Record<string, number> = {};
     for (const d of DOMAINS) {
       domainScores[d.id] = calcDomainScore(d, state.checkedIds);
     }

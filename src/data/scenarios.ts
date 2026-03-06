@@ -2,8 +2,9 @@ import {
   CloudLightning, Briefcase, Wifi, Bug, Zap, Stethoscope,
   TrendingDown, Truck,
 } from 'lucide-react';
+import type { Scenario, DomainScores } from '../types';
 
-const SCENARIOS = [
+const SCENARIOS: Scenario[] = [
   {
     id: 'job-loss',
     name: 'Job Loss',
@@ -193,7 +194,7 @@ const SCENARIOS = [
 export default SCENARIOS;
 
 /** Calculate scenario readiness from pre-computed domain scores */
-export function calcScenarioScore(scenario, domainScores) {
+export function calcScenarioScore(scenario: Scenario, domainScores: DomainScores): number {
   let totalScore = 0;
   for (const [domainId, impact] of Object.entries(scenario.impacts)) {
     if (impact.weight > 0) {
