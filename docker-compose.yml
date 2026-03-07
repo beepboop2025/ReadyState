@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - READYSTATE_DATABASE_URL=postgresql+asyncpg://readystate:readystate@postgres:5432/readystate
+      - READYSTATE_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-readystate}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-readystate}
       - READYSTATE_FRED_API_KEY=${FRED_API_KEY:-}
       - READYSTATE_NEWS_API_KEY=${NEWS_API_KEY:-}
       - READYSTATE_CORS_ORIGINS=http://localhost:3000,http://localhost:5173
@@ -27,9 +27,9 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: readystate
-      POSTGRES_PASSWORD: readystate
-      POSTGRES_DB: readystate
+      POSTGRES_USER: ${POSTGRES_USER:-readystate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-readystate}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
