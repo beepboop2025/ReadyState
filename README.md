@@ -1,100 +1,65 @@
-# ReadyState — Personal Resilience Intelligence Dashboard
+# ReadyState
 
-A beautiful, data-driven dashboard that scores your personal preparedness across 6 critical life domains. Integrates with live market data to dynamically adjust crisis threat levels — bringing institutional-grade risk methodology to personal life.
+**Personal resilience intelligence dashboard — score your preparedness across 6 life domains with live market threat intelligence.**
 
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript&logoColor=white) ![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/Tailwind-3-38bdf8?logo=tailwindcss&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-22c55e)
+![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6.svg)
+![React](https://img.shields.io/badge/React-18-blue.svg)
+![Vite](https://img.shields.io/badge/Vite-5-purple.svg)
+![Tailwind](https://img.shields.io/badge/Tailwind-3-38bdf8.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
-<br/>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/🛡️_ReadyState-v2.0-10b981?style=for-the-badge" alt="ReadyState v2.0" />
-</p>
+<!-- Add screenshot or demo GIF here -->
+> Replace this with a screenshot showing the readiness gauge, radar chart, and threat environment panel
 
 ---
 
-## Why ReadyState?
+## The Concept
 
-Climate events are increasing 5x since the 1970s. AI job displacement is accelerating. Cyberattacks are up 38% year-over-year. Yet there's **no tool** that gives normal people a unified view of their life readiness.
+Nobody scores their personal resilience the way institutions score risk. ReadyState does.
 
-**ReadyState is the missing middle ground** — a "credit score for life resilience" that's beautiful, actionable, and for everyone.
+**73 weighted checklist items across 6 life domains**, dynamically adjusted by live market signals — yield curve inversions, fear & greed indices, unemployment spikes. Your readiness score drops when real-world threats increase, showing you exactly where to focus.
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [The 6 Domains](#the-6-domains)
+- [Crisis Scenarios](#crisis-scenarios)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Configuration](#configuration)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
 ## Features
 
-### Core Dashboard
-- **Readiness Score (0–100)** — Animated SVG gauge with threshold-based color coding
-- **73 Weighted Checklist Items** — Each rated Critical / Important / Nice-to-have with expert tips
-- **Radar Chart** — Visualize domain balance across all 6 domains
-- **Smart Prioritization** — Action items auto-sorted by weight from your weakest domains
-- **Trend Tracking** — Daily score snapshots (up to 90 days) with area chart
-- **Global Search** — `Cmd+K` to search across all checklist items instantly
+| | Feature | Description |
+|---|---------|-------------|
+| :dart: | **Readiness Score (0-100)** | Animated SVG gauge with threshold-based color coding |
+| :brain: | **73 Weighted Checklist Items** | Critical/Important/Nice-to-have with expert tips |
+| :chart_with_upwards_trend: | **Live Threat Intelligence** | Real-time market signals dynamically adjust threat levels |
+| :radar: | **6-Domain Radar Chart** | Visual balance across Financial, Supplies, Digital, Health, Skills, Network |
+| :warning: | **8 Crisis Scenarios** | Job loss, natural disaster, cyberattack, pandemic, power outage, medical emergency, recession, relocation |
+| :bulb: | **Smart Prioritization** | Unchecked items auto-sorted by weight from your weakest domains |
+| :chart_with_downwards_trend: | **Trend Tracking** | 90-day score history with area chart |
+| :mag: | **Global Search** | Cmd+K full-text search across all checklist items |
+| :lock: | **100% Local** | All data in localStorage — no accounts, no telemetry |
+| :dragon: | **DragonScope Integration** | Embedded as a native panel in [DragonScope](https://github.com/beepboop2025/DragonScope) — syncs via localStorage |
 
-### 6 Life Domains
+---
 
-| Domain | Items | Covers |
-|--------|-------|--------|
-| **Financial** | 13 | Emergency funds, insurance, debt management, estate planning |
-| **Supplies** | 14 | Water, food, first aid, tools, go-bag, vital documents |
-| **Digital** | 12 | Passwords, 2FA, backups, encryption, account recovery |
-| **Health** | 11 | Medical records, fitness, mental health, vaccinations |
-| **Skills** | 12 | First aid, CPR, home repairs, career resilience, AI literacy |
-| **Network** | 11 | Emergency contacts, community ties, evacuation plans |
+## DragonScope Integration
 
-### Scenario Planner
+ReadyState is available as a **built-in panel** inside [DragonScope](https://github.com/beepboop2025/DragonScope), the open-source financial terminal.
 
-8 crisis simulations with weighted domain impact analysis:
-
-> Job Loss · Natural Disaster · Cyberattack · Pandemic · Extended Power Outage · Medical Emergency · Economic Recession · Forced Relocation
-
-Each scenario shows which domains matter most, critical items, effective risk calculations, and expert tips.
-
-### Dark & Light Themes
-
-Full theme support powered by CSS custom properties with Tailwind integration. Toggle between dark and light modes in Settings — your preference persists across sessions.
-
-### Celebrations & Onboarding
-
-- **First-time walkthrough** — 4-step guided onboarding for new users
-- **Milestone toasts** — Celebrate when you hit 25%, 50%, 75%, 100% overall readiness
-- **Domain completion** — Toast notification when any domain reaches 100%
-
-### Live Threat Intelligence (DragonScope)
-
-When connected to [DragonScope](https://github.com/beepboop2025/DragonScope), ReadyState pulls real market data to **dynamically adjust threat levels**:
-
-```
-Effective Risk = Threat Level × (1 - Readiness / 100)
-```
-
-| Market Signal | Scenario Impact |
-|---|---|
-| Yield curve inverted | Economic Crisis threat +25 |
-| Fear & Greed ≤ 20 | Economic Crisis +20, Overall +25 |
-| Unemployment > 6% | Job Loss +30, Medical +10 |
-| Hack/breach news > 5 mentions | Cyberattack +30 |
-| Reddit bearish > 60% | Job Loss +10, Economic +8 |
-
-Works perfectly standalone when DragonScope is offline.
-
-### FastAPI Backend (Optional)
-
-A full Python backend for persistence, external data sources, and analysis:
-
-- **FRED economic indicators** — Real unemployment, CPI, Fed funds rate
-- **NOAA weather alerts** — Active severe weather monitoring
-- **News aggregation** — Crisis keyword detection and scoring
-- **Supply chain stress** — Composite stress index
-- **User persistence** — PostgreSQL + async SQLAlchemy
-- **Resilience scoring engine** — Server-side score computation
-- **Forecasting** — Readiness trend prediction
-- **Alert engine** — Threat spike and score drop detection
-
-### Data & Privacy
-- **100% local storage** — All frontend data stays on your device
-- **Export** — JSON backup or CSV report
-- **Import** — Restore from backup with validation
-- **No accounts, no tracking** — Zero telemetry
+- Open DragonScope → press `Cmd+K` → search "Readiness" to add the panel
+- Your checklist data syncs bidirectionally via `localStorage` — run both apps and changes appear in both
+- The DragonScope panel computes threat levels directly from live market data (no separate API needed)
+- Joint Docker setup available in DragonScope's `docker-compose.yml`
 
 ---
 
@@ -107,105 +72,136 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3001` in your browser.
+Opens at `http://localhost:3001`. Works immediately — no backend required.
 
-### With Backend (Optional)
+### With Live Threat Data
 
-```bash
-# Start everything with Docker
-docker compose up
-
-# Or run locally:
-# Terminal 1 — Frontend
-npm run dev
-
-# Terminal 2 — Backend
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn backend.main:app --reload --port 8000
-```
-
-### With Live Threat Intelligence
-
-Run DragonScope's data server alongside ReadyState:
+Start DragonScope's data server for real-time market signals:
 
 ```bash
 cd DragonScope && node server/dataServer.js
+# ReadyState auto-connects on port 3456, polls every 2 minutes
 ```
 
-ReadyState auto-connects on port 3456 and polls every 2 minutes.
+### Full Stack (Optional FastAPI Backend)
+
+```bash
+docker compose up
+# PostgreSQL + Redis + FastAPI backend
+```
+
+---
+
+## The 6 Domains
+
+| Domain | Weight | Items | Covers |
+|--------|:------:|:-----:|--------|
+| **Financial** | 20% | 13 | Emergency fund, insurance, debt, estate planning, income resilience |
+| **Supplies** | 18% | 14 | Water, food, first aid, tools, go-bag, vital documents, 7-day stockpiles |
+| **Digital** | 15% | 12 | Password manager, 2FA, backups (3-2-1 rule), encryption, account recovery |
+| **Health** | 17% | 11 | Medical records, fitness, vaccinations, mental health, medications |
+| **Skills** | 15% | 12 | First aid, CPR, home repairs, career resilience, AI literacy, navigation |
+| **Network** | 15% | 11 | ICE contacts, community ties, evacuation plans, mutual aid, comm backup |
+
+Each item is weighted 1-3 (Nice-to-have, Important, Critical). Domain scores combine into an overall readiness score.
+
+---
+
+## Crisis Scenarios
+
+8 scenarios with weighted domain impact analysis:
+
+| Scenario | Severity | Key Domains |
+|----------|:--------:|-------------|
+| Job Loss | High | Financial, Skills, Network |
+| Natural Disaster | Critical | Supplies, Health, Network |
+| Cyberattack | High | Digital, Financial |
+| Pandemic | High | Health, Supplies, Financial |
+| Power Outage | Medium | Supplies, Digital |
+| Medical Emergency | Critical | Health, Financial, Network |
+| Economic Recession | High | Financial, Skills |
+| Forced Relocation | Medium | Supplies, Network, Financial |
+
+### Live Signal Integration
+
+Market signals dynamically adjust threat levels:
+
+| Signal | Effect |
+|--------|--------|
+| Yield curve inverted | +25 economic crisis threat |
+| Fear & Greed ≤ 20 | +20-25 overall threat |
+| Unemployment > 6% | +30 job loss, +10 medical |
+| 5+ hack/breach mentions | +30 cyberattack threat |
+| Reddit bearish > 60% | +8-10 spread across threats |
+
+**Effective Risk** = Threat Level × (1 - Readiness/100)
 
 ---
 
 ## Architecture
 
-```
-src/
-├── main.tsx                     # Entry + providers (Store, Toast, ErrorBoundary)
-├── App.tsx                      # Router + celebrations + onboarding
-├── store.tsx                    # React Context + useReducer + localStorage
-├── config.ts                    # Environment config + thresholds
-├── index.css                    # Tailwind + CSS custom properties (light/dark)
-├── types/
-│   └── index.ts                 # 30+ interfaces & type definitions
-├── components/
-│   ├── Layout.tsx               # Sidebar nav + header + search + responsive shell
-│   ├── Dashboard.tsx            # Main dashboard — gauge, cards, charts, stats
-│   ├── DomainView.tsx           # Domain detail — collapsible checklists, search, filter
-│   ├── ScenarioPlanner.tsx      # Crisis scenario simulation + live signals
-│   ├── Settings.tsx             # Profile, theme toggle, export/import, reset
-│   ├── ReadinessGauge.tsx       # Animated SVG circular gauge
-│   ├── RadarChart.tsx           # Recharts radar visualization
-│   ├── ActionItems.tsx          # Prioritized action list
-│   ├── ThreatEnvironment.tsx    # Live threat display + effective risk
-│   ├── ErrorBoundary.tsx        # React error boundary
-│   ├── Toast.tsx                # Toast notification system + provider
-│   └── Onboarding.tsx           # First-time user walkthrough
-├── data/
-│   ├── domains.ts               # 6 domains, 73 items, scoring functions
-│   └── scenarios.ts             # 8 scenarios with impact weights
-├── hooks/
-│   ├── useThreatLevel.ts        # Market signal → threat level engine
-│   └── useCelebrations.ts       # Milestone detection + toast triggers
-└── services/
-    └── dragonscope.ts           # DragonScope API client with caching
+```mermaid
+graph TB
+    subgraph Frontend
+        A[React 18 + TypeScript] --> B[Dashboard]
+        A --> C[Domain Views]
+        A --> D[Scenario Planner]
+        A --> E[Settings]
+    end
 
-backend/
-├── main.py                      # FastAPI app — routes, CORS, lifespan
-├── database.py                  # Async SQLAlchemy setup
-├── models/
-│   └── user.py                  # User, UserScore, ScoreHistory, AlertPreference
-└── services/
-    ├── economic.py              # FRED API integration
-    ├── news.py                  # News aggregation + crisis scoring
-    ├── weather.py               # NOAA weather alerts
-    ├── supply_chain.py          # Supply chain stress index
-    ├── resilience_scorer.py     # Score computation engine
-    ├── forecaster.py            # Trend forecasting
-    └── alert_engine.py          # Threat spike / score drop alerts
+    F[DragonScope API - Port 3456] -->|Market Signals| A
+    G[localStorage] -->|Checklist State| A
+
+    subgraph Optional Backend
+        H[FastAPI] --> I[(PostgreSQL)]
+        H --> J[(Redis)]
+        H --> K[FRED / NOAA / News APIs]
+    end
 ```
+
+Frontend-first design. All checklist data stays in localStorage. The backend is optional — adds economic indicators (FRED), weather alerts (NOAA), and persistent user profiles.
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Language** | TypeScript (strict mode) |
-| **UI** | React 18 |
-| **Build** | Vite 5 |
-| **Styling** | TailwindCSS 3 + CSS custom properties |
-| **Charts** | Recharts |
-| **Icons** | Lucide React |
-| **Backend** | FastAPI + SQLAlchemy + Pydantic |
-| **Database** | PostgreSQL (Docker) / SQLite (local) |
-| **Storage** | localStorage (frontend) |
+| Frontend | React 18, TypeScript (strict), Vite 5, Tailwind CSS 3 |
+| Charts | Recharts (radar, area) |
+| State | React Context + useReducer + localStorage |
+| Icons | Lucide React |
+| Backend (optional) | FastAPI, SQLAlchemy async, PostgreSQL, Redis |
+| Data Sources | DragonScope API, FRED, NOAA |
+| Deploy | Vite static build, Docker Compose |
 
-## Build
+---
 
-```bash
-npm run build     # Production build → dist/
-npm run preview   # Preview production build locally
-```
+## Configuration
+
+**Frontend** (works out of the box):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_DRAGONSCOPE_URL` | `http://localhost:3456` | Live market data source |
+
+**Backend** (optional, for Docker):
+
+| Variable | Description |
+|----------|-------------|
+| `READYSTATE_DATABASE_URL` | PostgreSQL or SQLite connection |
+| `READYSTATE_FRED_API_KEY` | Federal Reserve API (optional) |
+| `READYSTATE_NEWS_API_KEY` | News aggregation (optional) |
+
+---
+
+## Roadmap
+
+- [ ] Household profiles (track readiness per family member)
+- [ ] Geolocation-based threat adjustments (earthquake zones, flood plains)
+- [ ] Community readiness groups (shared checklists with neighbors)
+- [ ] Mobile app with push notifications for threat spikes
+- [ ] Integration with smart home sensors (power, water, temperature)
 
 ---
 
