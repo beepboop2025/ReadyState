@@ -22,15 +22,16 @@ Endpoints:
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from functools import lru_cache
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.database import get_db, get_session_factory, init_db
+from backend.database import get_session_factory, init_db
 from backend.models.user import AlertPreference, ScoreHistory, User, UserScore
 from backend.services.alert_engine import AlertEngine
 from backend.services.economic import FredService
@@ -49,7 +50,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./readystate.db"
     fred_api_key: str = ""
     news_api_key: str = ""
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://localhost:5173"
     smtp_host: str = ""
 
     class Config:
@@ -89,20 +90,38 @@ app.add_middleware(
 # Service singletons
 # ---------------------------------------------------------------------------
 
+_fred_instance: FredService | None = None
+_news_instance: NewsService | None = None
+_weather_instance: WeatherService | None = None
+_supply_chain_instance: SupplyChainService | None = None
+
+
 def _fred() -> FredService:
-    return FredService(get_settings().fred_api_key or None)
+    global _fred_instance
+    if _fred_instance is None:
+        _fred_instance = FredService(get_settings().fred_api_key or None)
+    return _fred_instance
 
 
 def _news() -> NewsService:
-    return NewsService(get_settings().news_api_key or None)
+    global _news_instance
+    if _news_instance is None:
+        _news_instance = NewsService(get_settings().news_api_key or None)
+    return _news_instance
 
 
 def _weather() -> WeatherService:
-    return WeatherService()
+    global _weather_instance
+    if _weather_instance is None:
+        _weather_instance = WeatherService()
+    return _weather_instance
 
 
 def _supply_chain() -> SupplyChainService:
-    return SupplyChainService(get_settings().fred_api_key or None)
+    global _supply_chain_instance
+    if _supply_chain_instance is None:
+        _supply_chain_instance = SupplyChainService(get_settings().fred_api_key or None)
+    return _supply_chain_instance
 
 
 _scorer = ResilienceScorer()
@@ -134,10 +153,10 @@ class AlertEvalRequest(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: str | None = None
-    household_size: int | None = None
+    name: str | None = Field(None, max_length=50)
+    household_size: int | None = Field(None, ge=1, le=20)
     checked_ids: list[str] | None = None
-    theme: str | None = None
+    theme: Literal["dark", "light"] | None = None
     domain_scores: dict[str, float] | None = None
 
 

@@ -7,9 +7,9 @@ interface WeightBadgeProps {
 }
 
 function WeightBadge({ weight }: WeightBadgeProps) {
-  if (weight === 3) return <span className="badge bg-rose-500/15 text-rose-400">Critical</span>;
-  if (weight === 2) return <span className="badge bg-amber-500/15 text-amber-400">Important</span>;
-  return <span className="badge bg-th-faint/15 text-th-muted">Nice to have</span>;
+  if (weight === 3) return <span className="badge bg-rose-500/10 text-rose-400 border border-rose-500/15">Critical</span>;
+  if (weight === 2) return <span className="badge bg-amber-500/10 text-amber-400 border border-amber-500/15">Important</span>;
+  return <span className="badge bg-th-faint/10 text-th-muted border border-th-border/20">Nice to have</span>;
 }
 
 interface ActionItemsProps {
@@ -22,32 +22,41 @@ export default function ActionItems({ limit = 8 }: ActionItemsProps) {
 
   if (actions.length === 0) {
     return (
-      <div className="card p-6 text-center animate-in">
-        <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+      <div className="card p-8 text-center animate-in">
+        <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4
+                        shadow-lg shadow-emerald-500/10">
+          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+        </div>
         <h3 className="text-lg font-semibold text-th-heading mb-1">All caught up!</h3>
-        <p className="text-sm text-th-muted">You've completed every action item. Outstanding resilience.</p>
+        <p className="text-sm text-th-muted leading-relaxed">
+          You've completed every action item. Outstanding resilience.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3 animate-in">
         <Zap className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-th-body uppercase tracking-wide">Priority Actions</h3>
+        <h3 className="text-[11px] font-semibold text-th-faint uppercase tracking-[0.15em]">
+          Priority Actions
+        </h3>
       </div>
       {actions.map((item, i) => (
         <div
           key={item.id}
-          className="card-hover p-4 flex items-start gap-3 animate-in"
-          style={{ animationDelay: `${i * 50}ms` }}
+          className={`card-hover p-4 flex items-start gap-3 animate-in stagger-${Math.min(i + 1, 10)}
+                     hover-glow`}
+          style={{ '--card-glow-color': item.domainColor } as React.CSSProperties}
         >
           <input
             type="checkbox"
             checked={state.checkedIds.has(item.id)}
             onChange={() => dispatch({ type: 'TOGGLE_ITEM', id: item.id })}
-            className="mt-0.5 rounded border-th-border-alt bg-th-input text-emerald-500
-                       focus:ring-emerald-500/30 focus:ring-offset-0 focus:ring-2 cursor-pointer"
+            className="mt-0.5 w-5 h-5 rounded-lg border-2 border-th-border-alt/60 bg-th-input/50
+                       text-emerald-500 focus:ring-emerald-500/25 focus:ring-offset-0 focus:ring-2
+                       cursor-pointer transition-all duration-250"
             aria-label={`Mark "${item.text}" as complete`}
           />
           <div className="flex-1 min-w-0">
@@ -67,7 +76,8 @@ export default function ActionItems({ limit = 8 }: ActionItemsProps) {
             )}
           </div>
           <button
-            className="flex-shrink-0 text-th-faint hover:text-th-muted transition-colors"
+            className="flex-shrink-0 text-th-faint hover:text-th-muted transition-all duration-200
+                       hover:translate-x-0.5 p-1 rounded-lg hover:bg-th-card-alt/30"
             onClick={() => dispatch({ type: 'NAVIGATE', view: `domain:${item.domainId}` })}
             aria-label={`Go to ${item.domainName} domain`}
           >

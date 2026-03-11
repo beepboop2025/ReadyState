@@ -8,6 +8,11 @@ import type {
   SentimentData, NewsSignals,
 } from '../types';
 
+// Module-level cache shared across all hook instances
+const CACHE_TTL_MS = 60_000; // 1 minute
+let _cachedResult: { data: ThreatData | null; connected: boolean; fetchedAt: number } | null = null;
+let _fetchPromise: Promise<void> | null = null;
+
 /**
  * Maps DragonScope market signals to dynamic threat levels per scenario.
  *
@@ -17,6 +22,8 @@ import type {
  *   - trend: 'rising' | 'stable' | 'falling'
  *
  * When DragonScope is offline, returns null (ReadyState falls back to static mode).
+ *
+ * Uses a module-level cache so multiple instances share data without redundant API calls.
  */
 export function useThreatLevel(): ThreatHookResult {
   const [data, setData] = useState<ThreatData | null>(null);
@@ -26,23 +33,51 @@ export function useThreatLevel(): ThreatHookResult {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refresh = useCallback(async () => {
-    try {
-      const signals = await fetchMarketSignals();
-      if (signals) {
-        const threats = computeAllThreats(signals);
-        setData(threats);
-        setConnected(true);
-        setLastUpdate(Date.now());
-      } else {
-        setConnected(false);
-        setData(null);
-      }
-    } catch {
-      setConnected(false);
-      setData(null);
-    } finally {
+    // Return cached data if still fresh
+    if (_cachedResult && Date.now() - _cachedResult.fetchedAt < CACHE_TTL_MS) {
+      setData(_cachedResult.data);
+      setConnected(_cachedResult.connected);
+      setLastUpdate(_cachedResult.fetchedAt);
       setLoading(false);
+      return;
     }
+
+    // If another instance is already fetching, wait for it
+    if (_fetchPromise) {
+      await _fetchPromise;
+      if (_cachedResult) {
+        setData(_cachedResult.data);
+        setConnected(_cachedResult.connected);
+        setLastUpdate(_cachedResult.fetchedAt);
+      }
+      setLoading(false);
+      return;
+    }
+
+    _fetchPromise = (async () => {
+      try {
+        const signals = await fetchMarketSignals();
+        if (signals) {
+          const threats = computeAllThreats(signals);
+          _cachedResult = { data: threats, connected: true, fetchedAt: Date.now() };
+        } else {
+          _cachedResult = { data: null, connected: false, fetchedAt: Date.now() };
+        }
+      } catch {
+        _cachedResult = { data: null, connected: false, fetchedAt: Date.now() };
+      } finally {
+        _fetchPromise = null;
+      }
+    })();
+
+    await _fetchPromise;
+
+    if (_cachedResult) {
+      setData(_cachedResult.data);
+      setConnected(_cachedResult.connected);
+      setLastUpdate(_cachedResult.fetchedAt);
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {

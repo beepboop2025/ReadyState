@@ -26,15 +26,18 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       return (
         <div className="min-h-screen bg-th-page flex items-center justify-center p-8">
           <div className="max-w-md w-full text-center">
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/15
+                            flex items-center justify-center mx-auto mb-6
+                            shadow-lg shadow-rose-500/10">
               <AlertTriangle className="w-8 h-8 text-rose-400" />
             </div>
             <h1 className="text-2xl font-bold text-th-heading mb-2">Something went wrong</h1>
-            <p className="text-sm text-th-muted mb-6">
+            <p className="text-sm text-th-muted mb-6 leading-relaxed">
               ReadyState encountered an unexpected error. Your data is safe — it's stored locally on your device.
             </p>
             {this.state.error && (
-              <pre className="text-xs text-th-faint bg-th-card-alt/60 p-4 rounded-xl mb-6 text-left overflow-auto max-h-32">
+              <pre className="text-xs text-th-faint bg-th-card/70 backdrop-blur-sm border border-th-border/30
+                              p-4 rounded-xl mb-6 text-left overflow-auto max-h-32">
                 {this.state.error.message}
               </pre>
             )}

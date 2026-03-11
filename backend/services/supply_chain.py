@@ -31,6 +31,20 @@ SUPPLY_CHAIN_SERIES = {
 
 
 class SupplyChainService:
+    _shared_client: httpx.AsyncClient | None = None
+
+    @classmethod
+    def _get_client(cls) -> httpx.AsyncClient:
+        if cls._shared_client is None or cls._shared_client.is_closed:
+            cls._shared_client = httpx.AsyncClient(timeout=10)
+        return cls._shared_client
+
+    @classmethod
+    async def close_client(cls) -> None:
+        if cls._shared_client is not None and not cls._shared_client.is_closed:
+            await cls._shared_client.aclose()
+            cls._shared_client = None
+
     def __init__(self, fred_api_key: str | None = None):
         self.fred_api_key = fred_api_key
         self.fred_base = "https://api.stlouisfed.org/fred/series/observations"
@@ -47,19 +61,19 @@ class SupplyChainService:
                 return data
 
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(
-                    self.fred_base,
-                    params={
-                        "series_id": series_id,
-                        "api_key": self.fred_api_key,
-                        "file_type": "json",
-                        "sort_order": "desc",
-                        "limit": limit,
-                    },
-                )
-                resp.raise_for_status()
-                data = resp.json()
+            client = self._get_client()
+            resp = await client.get(
+                self.fred_base,
+                params={
+                    "series_id": series_id,
+                    "api_key": self.fred_api_key,
+                    "file_type": "json",
+                    "sort_order": "desc",
+                    "limit": limit,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
 
             obs = [
                 {"date": o["date"], "value": float(o["value"])}

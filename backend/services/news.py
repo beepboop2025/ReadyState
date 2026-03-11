@@ -30,6 +30,20 @@ CACHE_TTL = timedelta(minutes=15)
 
 
 class NewsService:
+    _shared_client: httpx.AsyncClient | None = None
+
+    @classmethod
+    def _get_client(cls) -> httpx.AsyncClient:
+        if cls._shared_client is None or cls._shared_client.is_closed:
+            cls._shared_client = httpx.AsyncClient(timeout=10)
+        return cls._shared_client
+
+    @classmethod
+    async def close_client(cls) -> None:
+        if cls._shared_client is not None and not cls._shared_client.is_closed:
+            await cls._shared_client.aclose()
+            cls._shared_client = None
+
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key
         self.base_url = "https://newsapi.org/v2"
@@ -55,10 +69,10 @@ class NewsService:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(f"{self.base_url}/everything", params=params)
-                resp.raise_for_status()
-                data = resp.json()
+            client = self._get_client()
+            resp = await client.get(f"{self.base_url}/everything", params=params)
+            resp.raise_for_status()
+            data = resp.json()
 
             articles = [
                 {

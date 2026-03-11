@@ -5,7 +5,6 @@ SQLAlchemy async engine + session factory.
 Uses SQLite for development, PostgreSQL for production.
 """
 
-from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from backend.models import Base
@@ -51,8 +50,3 @@ async def init_db(database_url: str):
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def get_db(database_url: str):
-    """Dependency for FastAPI — yields an async session."""
-    factory = get_session_factory(database_url)
-    async with factory() as session:
-        yield session

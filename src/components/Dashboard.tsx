@@ -19,41 +19,50 @@ interface DomainCardProps {
   domain: Domain;
   score: number;
   onClick: () => void;
+  index: number;
 }
 
-function DomainCard({ domain, score, onClick }: DomainCardProps) {
+function DomainCard({ domain, score, onClick, index }: DomainCardProps) {
   const Icon = domain.icon;
   const totalItems = domain.categories.reduce((acc, c) => acc + c.items.length, 0);
 
-  const barColor =
-    score >= SCORE_THRESHOLDS.STRONG ? 'bg-emerald-500' :
-    score >= SCORE_THRESHOLDS.MODERATE ? 'bg-yellow-500' :
-    score >= SCORE_THRESHOLDS.DEVELOPING ? 'bg-amber-500' :
-                  'bg-rose-500';
+  const barGradient =
+    score >= SCORE_THRESHOLDS.STRONG ? 'from-emerald-500 to-emerald-400' :
+    score >= SCORE_THRESHOLDS.MODERATE ? 'from-yellow-500 to-yellow-400' :
+    score >= SCORE_THRESHOLDS.DEVELOPING ? 'from-amber-500 to-amber-400' :
+                  'from-rose-500 to-rose-400';
 
   return (
     <button
       onClick={onClick}
-      className="card-hover p-5 text-left group animate-in"
+      className={`card-domain p-5 text-left group hover-glow animate-in stagger-${Math.min(index + 1, 10)}`}
+      style={{ '--card-glow-color': domain.color } as React.CSSProperties}
       aria-label={`${domain.name}: ${score}% complete. ${totalItems} items.`}
     >
       <div className="flex items-start justify-between mb-3">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          className="domain-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center
+                     transition-all duration-300"
           style={{ background: domain.colorBg }}
         >
           <Icon className="w-5 h-5" style={{ color: domain.color }} />
         </div>
-        <span className="text-2xl font-bold text-th-heading score-label">{score}%</span>
+        <span className="text-2xl font-bold text-th-heading score-label transition-all duration-500">
+          {score}%
+        </span>
       </div>
       <h3 className="text-sm font-semibold text-th-heading mb-1">{domain.name}</h3>
-      <p className="text-xs text-th-faint mb-3 line-clamp-2">{domain.description}</p>
+      <p className="text-xs text-th-faint mb-3 line-clamp-2 leading-relaxed">{domain.description}</p>
       <div className="progress-track" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
-        <div className={`progress-fill ${barColor}`} style={{ width: `${score}%` }} />
+        <div
+          className={`progress-fill bg-gradient-to-r ${barGradient}`}
+          style={{ width: `${score}%` }}
+        />
       </div>
-      <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center justify-between mt-2.5">
         <span className="text-[11px] text-th-faint">{totalItems} items</span>
-        <ArrowRight className="w-3.5 h-3.5 text-th-faint group-hover:text-th-muted transition-colors" />
+        <ArrowRight className="w-3.5 h-3.5 text-th-faint group-hover:text-th-muted
+                               transition-all duration-200 group-hover:translate-x-1" />
       </div>
     </button>
   );
@@ -76,30 +85,42 @@ function StatsRow({ checkedIds }: StatsRowProps) {
       value: `${completed}/${total}`,
       icon: CheckCircle,
       color: 'text-emerald-400',
+      glowColor: 'rgba(16,185,129,0.08)',
+      borderHover: 'hover:border-emerald-500/20',
     },
     {
       label: 'Critical Items',
       value: `${criticalDone}/${criticalTotal}`,
       icon: Clock,
       color: 'text-rose-400',
+      glowColor: 'rgba(244,63,94,0.08)',
+      borderHover: 'hover:border-rose-500/20',
     },
     {
       label: 'Domains',
       value: DOMAINS.length.toString(),
       icon: BarChart3,
       color: 'text-blue-400',
+      glowColor: 'rgba(59,130,246,0.08)',
+      borderHover: 'hover:border-blue-500/20',
     },
   ];
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {stats.map(s => {
+      {stats.map((s, i) => {
         const StatIcon = s.icon;
         return (
-          <div key={s.label} className="card p-4 animate-in">
-            <div className="flex items-center gap-2 mb-1">
-              <StatIcon className={`w-4 h-4 ${s.color}`} />
-              <span className="text-[11px] text-th-faint uppercase tracking-wide font-medium">{s.label}</span>
+          <div
+            key={s.label}
+            className={`card p-4 group ${s.borderHover}
+                       transition-all duration-300 animate-in stagger-${i + 1}`}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <StatIcon className={`w-4 h-4 ${s.color} transition-transform duration-200 group-hover:scale-110`} />
+              <span className="text-[10px] text-th-faint uppercase tracking-[0.12em] font-semibold">
+                {s.label}
+              </span>
             </div>
             <span className="text-xl font-bold text-th-heading score-label">{s.value}</span>
           </div>
@@ -116,9 +137,9 @@ interface TrendChartProps {
 function TrendChart({ history }: TrendChartProps) {
   if (history.length < 2) {
     return (
-      <div className="card p-6 flex flex-col items-center justify-center h-48 animate-in">
+      <div className="card p-6 flex flex-col items-center justify-center h-48 animate-in stagger-3">
         <TrendingUp className="w-8 h-8 text-th-faint mb-2" />
-        <p className="text-sm text-th-faint text-center">
+        <p className="text-sm text-th-faint text-center leading-relaxed">
           Your readiness trend will appear here as you make progress over multiple days.
         </p>
       </div>
@@ -131,25 +152,32 @@ function TrendChart({ history }: TrendChartProps) {
   }));
 
   return (
-    <div className="card p-5 animate-in">
+    <div className="card p-5 animate-in stagger-3">
       <h3 className="text-sm font-semibold text-th-body mb-4">Readiness Trend</h3>
       <ResponsiveContainer width="100%" height={160}>
         <AreaChart data={data}>
           <defs>
             <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
               <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="date"
+            tick={{ fill: 'rgb(var(--c-faint))', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis domain={[0, 100]} hide />
           <Tooltip
             contentStyle={{
-              background: 'rgb(var(--c-card))',
-              border: '1px solid rgb(var(--c-border) / 0.6)',
+              background: 'rgb(var(--c-card) / 0.95)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgb(var(--c-border) / 0.4)',
               borderRadius: 12,
               color: 'rgb(var(--c-body))',
               fontSize: 12,
+              boxShadow: '0 8px 32px -8px rgba(0,0,0,0.3)',
             }}
             formatter={(val: number) => [`${val}%`, 'Readiness']}
           />
@@ -159,7 +187,8 @@ function TrendChart({ history }: TrendChartProps) {
             stroke="#10b981"
             strokeWidth={2}
             fill="url(#trendGrad)"
-            dot={{ r: 3, fill: '#10b981' }}
+            dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: '#10b981', stroke: 'rgba(16,185,129,0.3)', strokeWidth: 4 }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -172,23 +201,23 @@ export default function Dashboard() {
   const { domainScores, overall } = useScores();
 
   return (
-    <div className="space-y-8 animate-fade">
+    <div className="space-y-8 page-fade">
       {/* Hero Section */}
       <div className="flex flex-col lg:flex-row items-center gap-8">
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 animate-in">
           <ReadinessGauge score={overall} size={220} />
         </div>
 
         <div className="flex-1 min-w-0 space-y-4 w-full">
-          <div>
-            <h2 className="text-2xl font-bold text-th-heading mb-1">
+          <div className="animate-in stagger-1">
+            <h2 className="text-2xl font-bold text-th-heading mb-1.5 leading-tight">
               {overall >= SCORE_THRESHOLDS.STRONG ? 'You\'re well prepared.' :
                overall >= SCORE_THRESHOLDS.MODERATE ? 'Good progress — keep going.' :
                overall >= SCORE_THRESHOLDS.DEVELOPING ? 'Getting there. Focus on critical items.' :
                overall >= SCORE_THRESHOLDS.VULNERABLE ? 'Let\'s build your resilience.' :
                                'Start your resilience journey today.'}
             </h2>
-            <p className="text-sm text-th-muted">
+            <p className="text-sm text-th-muted leading-relaxed">
               Your personal resilience score across {DOMAINS.length} critical life domains.
               Every item you complete makes you more prepared for the unexpected.
             </p>
@@ -200,14 +229,17 @@ export default function Dashboard() {
       {/* Domain Grid + Radar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <h3 className="text-sm font-semibold text-th-muted uppercase tracking-wide mb-4">Domains</h3>
+          <h3 className="text-[11px] font-semibold text-th-faint uppercase tracking-[0.15em] mb-4 animate-in">
+            Domains
+          </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {DOMAINS.map(d => (
+            {DOMAINS.map((d, i) => (
               <DomainCard
                 key={d.id}
                 domain={d}
                 score={domainScores[d.id]}
                 onClick={() => dispatch({ type: 'NAVIGATE', view: `domain:${d.id}` })}
+                index={i}
               />
             ))}
           </div>
@@ -216,7 +248,7 @@ export default function Dashboard() {
           <ThreatEnvironmentCard
             onNavigate={() => dispatch({ type: 'NAVIGATE', view: 'scenarios' })}
           />
-          <div className="card p-5 animate-in">
+          <div className="card p-5 animate-in stagger-2">
             <h3 className="text-sm font-semibold text-th-body mb-2">Domain Balance</h3>
             <DomainRadarChart />
           </div>

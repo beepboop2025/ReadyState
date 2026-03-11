@@ -36,7 +36,7 @@ function ScorePill({ score, size = 'sm' }: ScorePillProps) {
                   'text-rose-400 bg-rose-500/10';
   const sz = size === 'sm' ? 'text-xs px-2 py-0.5' : 'text-sm px-2.5 py-1';
   return (
-    <span className={`${color} ${sz} rounded-full font-semibold score-label`}>
+    <span className={`${color} ${sz} rounded-full font-semibold score-label backdrop-blur-sm transition-all duration-500`}>
       {score}%
     </span>
   );
@@ -52,9 +52,13 @@ function SearchResult({ item, onSelect }: SearchResultProps) {
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left px-4 py-2.5 hover:bg-th-card-alt/60 transition-colors flex items-center gap-3"
+      className="w-full text-left px-4 py-3 hover:bg-th-card-alt/60 transition-all duration-200
+                 flex items-center gap-3 group"
     >
-      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: domain?.color }} />
+      <span
+        className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-transform duration-200 group-hover:scale-125"
+        style={{ background: domain?.color }}
+      />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-th-body truncate">{item.text}</p>
         <p className="text-xs text-th-faint">{domain?.name} &middot; {item.category}</p>
@@ -75,12 +79,28 @@ export default function Layout({ children }: LayoutProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const touchStartRef = useRef<number>(0);
+  const [viewKey, setViewKey] = useState(0);
+  const prevViewRef = useRef(currentView);
+
+  // Trigger page transition on view change
+  useEffect(() => {
+    if (prevViewRef.current !== currentView) {
+      setViewKey(k => k + 1);
+      prevViewRef.current = currentView;
+    }
+  }, [currentView]);
 
   const scoreColor =
     overall >= SCORE_THRESHOLDS.STRONG ? 'from-emerald-500 to-emerald-400' :
     overall >= SCORE_THRESHOLDS.MODERATE ? 'from-yellow-500 to-yellow-400' :
     overall >= SCORE_THRESHOLDS.DEVELOPING ? 'from-amber-500 to-amber-400' :
                     'from-rose-500 to-rose-400';
+
+  const scoreGlow =
+    overall >= SCORE_THRESHOLDS.STRONG ? 'shadow-emerald-500/30' :
+    overall >= SCORE_THRESHOLDS.MODERATE ? 'shadow-yellow-500/30' :
+    overall >= SCORE_THRESHOLDS.DEVELOPING ? 'shadow-amber-500/30' :
+                    'shadow-rose-500/30';
 
   // Global search results
   const allItems = useMemo(() => getAllItems(), []);
@@ -129,18 +149,19 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden bg-th-page">
       {/* Sidebar Overlay (mobile) */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => dispatch({ type: 'CLOSE_SIDEBAR' })}
-        />
-      )}
+      <div
+        className={`
+          fixed inset-0 z-40 lg:hidden transition-all duration-300
+          ${sidebarOpen ? 'bg-black/50 backdrop-blur-sm opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+        `}
+        onClick={() => dispatch({ type: 'CLOSE_SIDEBAR' })}
+      />
 
       {/* Sidebar */}
       <aside
         className={`
           fixed lg:static inset-y-0 left-0 z-50
-          w-72 bg-th-card/95 backdrop-blur-xl border-r border-th-border/60
+          w-72 glass-sidebar
           flex flex-col
           transition-transform duration-300 ease-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -149,16 +170,24 @@ export default function Layout({ children }: LayoutProps) {
         onTouchEnd={handleTouchEnd}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-th-border/60">
-          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${scoreColor} flex items-center justify-center`}>
-            <Shield className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-th-border/40">
+          <div className={`
+            w-10 h-10 rounded-xl bg-gradient-to-br ${scoreColor}
+            flex items-center justify-center
+            shadow-lg ${scoreGlow}
+            transition-all duration-500
+          `}>
+            <Shield className="w-5 h-5 text-white drop-shadow-sm" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-th-heading tracking-tight">ReadyState</h1>
-            <p className="text-[11px] text-th-faint font-medium tracking-wide uppercase">Resilience Intelligence</p>
+            <p className="text-[10px] text-th-faint font-semibold tracking-[0.15em] uppercase">
+              Resilience Intelligence
+            </p>
           </div>
           <button
-            className="ml-auto lg:hidden text-th-muted hover:text-th-heading"
+            className="ml-auto lg:hidden text-th-muted hover:text-th-heading transition-colors duration-200
+                       p-1.5 rounded-lg hover:bg-th-card-alt/40"
             onClick={() => dispatch({ type: 'CLOSE_SIDEBAR' })}
             aria-label="Close sidebar"
           >
@@ -167,12 +196,21 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Overall Score Mini */}
-        <div className="px-5 py-4 border-b border-th-border/40">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-th-faint font-medium uppercase tracking-wide">Overall Readiness</span>
+        <div className="px-5 py-4 border-b border-th-border/30">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[10px] text-th-faint font-semibold uppercase tracking-[0.12em]">
+              Overall Readiness
+            </span>
             <ScorePill score={overall} />
           </div>
-          <div className="progress-track" role="progressbar" aria-valuenow={overall} aria-valuemin={0} aria-valuemax={100} aria-label="Overall readiness">
+          <div
+            className="progress-track"
+            role="progressbar"
+            aria-valuenow={overall}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Overall readiness"
+          >
             <div
               className={`progress-fill bg-gradient-to-r ${scoreColor}`}
               style={{ width: `${overall}%` }}
@@ -192,30 +230,52 @@ export default function Layout({ children }: LayoutProps) {
                 key={item.id}
                 onClick={() => dispatch({ type: 'NAVIGATE', view: item.id })}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                  transition-all duration-150 group
+                  nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                  transition-all duration-200 ease-out group relative overflow-hidden
                   ${isActive
-                    ? 'bg-th-input/80 text-th-heading shadow-sm'
-                    : 'text-th-muted hover:text-th-heading hover:bg-th-card-alt/40'
+                    ? 'bg-th-input/70 text-th-heading shadow-sm'
+                    : 'text-th-muted hover:text-th-heading hover:bg-th-card-alt/30'
                   }
                 `}
                 aria-current={isActive ? 'page' : undefined}
               >
+                {/* Active indicator bar */}
+                {isActive && (
+                  <div
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full
+                               bg-gradient-to-b from-emerald-400 to-emerald-500
+                               animate-nav-indicator
+                               shadow-sm shadow-emerald-500/50"
+                  />
+                )}
+
+                {/* Active background glow */}
+                {isActive && item.color && (
+                  <div
+                    className="absolute inset-0 opacity-[0.04] rounded-xl transition-opacity duration-500"
+                    style={{ background: item.color }}
+                  />
+                )}
+
                 <Icon
-                  className="w-[18px] h-[18px] flex-shrink-0"
+                  className={`w-[18px] h-[18px] flex-shrink-0 transition-all duration-200 relative z-10 ${
+                    isActive ? 'scale-105' : 'group-hover:scale-110'
+                  }`}
                   style={item.color ? { color: isActive ? item.color : undefined } : undefined}
                 />
-                <span className="flex-1 text-left">{item.label}</span>
+                <span className="flex-1 text-left relative z-10">{item.label}</span>
                 {domainScore !== null && <ScorePill score={domainScore} />}
-                {isActive && <ChevronRight className="w-4 h-4 text-th-faint" />}
+                {isActive && (
+                  <ChevronRight className="w-4 h-4 text-th-faint transition-transform duration-200" />
+                )}
               </button>
             );
           })}
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-th-border/40">
-          <p className="text-[11px] text-th-faint text-center">
+        <div className="px-5 py-4 border-t border-th-border/30">
+          <p className="text-[10px] text-th-faint/70 text-center font-medium">
             Your data stays on your device.
           </p>
         </div>
@@ -224,33 +284,42 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-4 px-4 lg:px-8 py-4 border-b border-th-border/40 bg-th-page/80 backdrop-blur-sm">
+        <header className="sticky top-0 z-30 flex items-center gap-4 px-4 lg:px-8 py-4
+                           border-b border-th-border/30
+                           bg-th-page/70 backdrop-blur-xl">
           <button
-            className="lg:hidden text-th-muted hover:text-th-heading p-1"
+            className="lg:hidden text-th-muted hover:text-th-heading p-1.5 rounded-lg
+                       hover:bg-th-card-alt/40 transition-all duration-200"
             onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
             aria-label="Open sidebar"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
 
           {/* Search */}
           <div className="relative flex-1 max-w-md">
             <button
               onClick={() => { setSearchOpen(true); setTimeout(() => searchRef.current?.focus(), 100); }}
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm text-th-faint
-                         bg-th-card-alt/40 border border-th-border/60 hover:border-th-border-alt/60 transition-colors"
+              className="flex items-center gap-2 w-full px-3.5 py-2 rounded-xl text-sm text-th-faint
+                         bg-th-card/50 border border-th-border/40
+                         hover:border-th-border-alt/60 hover:bg-th-card/70
+                         transition-all duration-200 backdrop-blur-sm"
             >
               <SearchIcon className="w-4 h-4" />
               <span className="flex-1 text-left">Search items...</span>
-              <kbd className="hidden sm:inline text-[10px] text-th-faint bg-th-input px-1.5 py-0.5 rounded">⌘K</kbd>
+              <kbd className="hidden sm:inline text-[10px] text-th-faint/70 bg-th-input/70 px-1.5 py-0.5 rounded-md font-mono">
+                ⌘K
+              </kbd>
             </button>
 
             {/* Search Dropdown */}
             {searchOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => { setSearchOpen(false); setSearchQuery(''); }} />
-                <div className="absolute top-full left-0 right-0 mt-2 z-50 card shadow-2xl overflow-hidden">
-                  <div className="p-3 border-b border-th-border/40">
+                <div className="absolute top-full left-0 right-0 mt-2 z-50
+                                card shadow-2xl overflow-hidden
+                                animate-slide-in-right">
+                  <div className="p-3 border-b border-th-border/30">
                     <input
                       ref={searchRef}
                       type="text"
@@ -262,7 +331,7 @@ export default function Layout({ children }: LayoutProps) {
                     />
                   </div>
                   {searchResults.length > 0 && (
-                    <div className="max-h-64 overflow-y-auto">
+                    <div className="max-h-72 overflow-y-auto">
                       {searchResults.map(item => (
                         <SearchResult
                           key={item.id}
@@ -277,7 +346,7 @@ export default function Layout({ children }: LayoutProps) {
                     </div>
                   )}
                   {searchQuery.length >= 2 && searchResults.length === 0 && (
-                    <div className="p-4 text-center text-sm text-th-faint">No items found.</div>
+                    <div className="p-5 text-center text-sm text-th-faint">No items found.</div>
                   )}
                 </div>
               </>
@@ -289,20 +358,22 @@ export default function Layout({ children }: LayoutProps) {
               Hello, <span className="text-th-body font-medium">{state.userName}</span>
             </span>
           )}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-th-faint hidden sm:inline">Readiness</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs text-th-faint hidden sm:inline font-medium">Readiness</span>
             <div className={`
-              px-3 py-1.5 rounded-full font-bold text-sm score-label
+              px-3.5 py-1.5 rounded-full font-bold text-sm score-label
               bg-gradient-to-r ${scoreColor} text-white
+              shadow-lg ${scoreGlow}
+              transition-all duration-500
             `}>
               {overall}%
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content with transition */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
+          <div key={viewKey} className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 page-enter">
             {children}
           </div>
         </div>

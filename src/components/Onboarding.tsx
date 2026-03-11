@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, CheckCircle2, BarChart3, AlertTriangle, ArrowRight, X } from 'lucide-react';
 
 interface OnboardingProps {
@@ -34,25 +34,77 @@ const STEPS = [
 
 export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
+  const [transitioning, setTransitioning] = useState(false);
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const current = STEPS[step];
   const Icon = current.icon;
   const isLast = step === STEPS.length - 1;
 
+  function goNext() {
+    if (isLast) {
+      onComplete();
+    } else {
+      setDirection('forward');
+      setTransitioning(true);
+    }
+  }
+
+  function goBack() {
+    if (step > 0) {
+      setDirection('back');
+      setTransitioning(true);
+    }
+  }
+
+  // Handle step transition
+  useEffect(() => {
+    if (!transitioning) return;
+    const timer = setTimeout(() => {
+      setStep(prev => direction === 'forward' ? prev + 1 : prev - 1);
+      setTransitioning(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [transitioning, direction]);
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="card p-8 max-w-md w-full mx-4 animate-in relative">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade">
+      <div className="card p-8 max-w-md w-full mx-4 relative shadow-2xl overflow-hidden">
+        {/* Ambient glow behind the icon */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl
+                     transition-all duration-700 pointer-events-none"
+          style={{
+            background: current.color,
+            opacity: 0.08,
+          }}
+        />
+
         <button
           onClick={onComplete}
-          className="absolute top-4 right-4 text-th-faint hover:text-th-muted transition-colors"
+          className="absolute top-4 right-4 text-th-faint hover:text-th-muted transition-all duration-200
+                     p-1.5 rounded-lg hover:bg-th-card-alt/40 z-10"
           aria-label="Skip onboarding"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex flex-col items-center text-center">
+        <div
+          className={`flex flex-col items-center text-center transition-all duration-300 ease-out ${
+            transitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          }`}
+          style={{
+            transform: transitioning
+              ? `translateX(${direction === 'forward' ? '-20px' : '20px'}) scale(0.95)`
+              : 'translateX(0) scale(1)',
+          }}
+        >
           <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-            style={{ background: current.color + '15' }}
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5
+                       transition-all duration-500"
+            style={{
+              background: current.color + '12',
+              boxShadow: `0 0 40px -8px ${current.color}40`,
+            }}
           >
             <Icon className="w-8 h-8" style={{ color: current.color }} />
           </div>
@@ -65,9 +117,21 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             {STEPS.map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === step ? 'w-6 bg-emerald-500' : 'w-1.5 bg-th-border'
+                className={`rounded-full transition-all duration-500 ease-out ${
+                  i === step
+                    ? 'w-7 h-1.5'
+                    : i < step
+                    ? 'w-1.5 h-1.5'
+                    : 'w-1.5 h-1.5'
                 }`}
+                style={{
+                  background: i === step
+                    ? current.color
+                    : i < step
+                    ? current.color + '80'
+                    : 'rgb(var(--c-border))',
+                  boxShadow: i === step ? `0 0 8px -2px ${current.color}60` : 'none',
+                }}
               />
             ))}
           </div>
@@ -75,16 +139,22 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <div className="flex items-center gap-3">
             {step > 0 && (
               <button
-                onClick={() => setStep(step - 1)}
-                className="px-4 py-2 text-sm text-th-muted hover:text-th-heading transition-colors"
+                onClick={goBack}
+                className="px-4 py-2.5 text-sm text-th-muted hover:text-th-heading
+                           transition-all duration-200 rounded-xl hover:bg-th-card-alt/30"
               >
                 Back
               </button>
             )}
             <button
-              onClick={isLast ? onComplete : () => setStep(step + 1)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                         bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+              onClick={goNext}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold
+                         text-white shadow-lg transition-all duration-300
+                         hover:shadow-xl active:scale-[0.97]"
+              style={{
+                background: `linear-gradient(135deg, ${current.color}, ${current.color}cc)`,
+                boxShadow: `0 4px 20px -4px ${current.color}40`,
+              }}
             >
               {isLast ? 'Get Started' : 'Next'}
               <ArrowRight className="w-4 h-4" />

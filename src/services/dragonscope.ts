@@ -125,7 +125,7 @@ function parseFearGreed(data: any): FearGreedData | null {
   const val = data.data?.[0]?.value ?? data.value ?? data.fear_greed_value;
   const classification = data.data?.[0]?.value_classification ?? data.classification ?? '';
   return {
-    value: Number(val) || 50,
+    value: Number.isFinite(Number(val)) ? Number(val) : 50,
     classification: classification || 'Neutral',
   };
 }
@@ -146,9 +146,9 @@ function parseBonds(data: any): BondsData | null {
       const vals = series.values || series.data || [];
       const last = vals[vals.length - 1];
       const value = Number(last?.value ?? last) || 0;
-      if (key.includes('2')) yields['2Y'] = value;
-      if (key.includes('10')) yields['10Y'] = value;
-      if (key.includes('30')) yields['30Y'] = value;
+      if (key.includes('2Y') || key === 'GS2') yields['2Y'] = value;
+      if (key.includes('10Y') || key === 'GS10') yields['10Y'] = value;
+      if (key.includes('30Y') || key === 'GS30') yields['30Y'] = value;
     }
   }
 
@@ -207,10 +207,12 @@ function parseSentiment(data: any): SentimentData | null {
       else neutral++;
     }
     const total = data.length || 1;
+    const bullishPct = Math.round((bullish / total) * 100);
+    const bearishPct = Math.round((bearish / total) * 100);
     return {
-      bullish: Math.round((bullish / total) * 100),
-      bearish: Math.round((bearish / total) * 100),
-      neutral: Math.round((neutral / total) * 100),
+      bullish: bullishPct,
+      bearish: bearishPct,
+      neutral: 100 - bullishPct - bearishPct,
     };
   }
   return null;

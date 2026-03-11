@@ -79,6 +79,8 @@ function reducer(state: AppState, action: AppAction): AppState {
       return { ...state, theme: action.theme };
     case 'RECORD_SNAPSHOT': {
       const today = new Date().toISOString().slice(0, 10);
+      const existingToday = state.completionHistory.find(h => h.date === today);
+      if (existingToday && existingToday.score === action.score) return state;
       const existing = state.completionHistory.filter(h => h.date !== today);
       return {
         ...state,

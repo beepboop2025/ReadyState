@@ -21,7 +21,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(255), default="")
     household_size: Mapped[int] = mapped_column(Integer, default=1)
     # Checked item IDs stored as JSON array
-    checked_ids: Mapped[dict] = mapped_column(JSON, default=list)
+    checked_ids: Mapped[list] = mapped_column(JSON, default=list)
     theme: Mapped[str] = mapped_column(String(10), default="dark")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow)
