@@ -1,3 +1,8 @@
+<!-- textura-banner -->
+<div align="center">
+  <a href="https://github.com/beepboop2025/ReadyState"><img src="./banner.svg" width="100%" alt="ReadyState" /></a>
+</div>
+
 # ReadyState
 
 **Personal resilience dashboard -- track your preparedness across six life domains with live market threat intelligence.**
