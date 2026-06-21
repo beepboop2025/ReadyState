@@ -96,7 +96,7 @@ export async function fetchMarketSignals(): Promise<MarketSignals | null> {
 // ─── Parsers (extract threat-relevant signals) ────────────────────
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function parseEconomic(data: any): EconomicData | null {
+export function parseEconomic(data: any): EconomicData | null {
   if (!data) return null;
   const extract = (key: string): number | null => {
     const series = data[key] || data[key?.toUpperCase()];
@@ -120,7 +120,7 @@ function parseEconomic(data: any): EconomicData | null {
   };
 }
 
-function parseFearGreed(data: any): FearGreedData | null {
+export function parseFearGreed(data: any): FearGreedData | null {
   if (!data) return null;
   const val = data.data?.[0]?.value ?? data.value ?? data.fear_greed_value;
   const classification = data.data?.[0]?.value_classification ?? data.classification ?? '';
@@ -130,7 +130,7 @@ function parseFearGreed(data: any): FearGreedData | null {
   };
 }
 
-function parseBonds(data: any): BondsData | null {
+export function parseBonds(data: any): BondsData | null {
   if (!data) return null;
   const yields: Record<string, number> = {};
   if (Array.isArray(data)) {
@@ -160,7 +160,7 @@ function parseBonds(data: any): BondsData | null {
   };
 }
 
-function parseCommodities(data: any): CommoditiesData | null {
+export function parseCommodities(data: any): CommoditiesData | null {
   if (!data) return null;
   const prices: CommoditiesData = {};
   if (Array.isArray(data)) {
@@ -178,7 +178,7 @@ function parseCommodities(data: any): CommoditiesData | null {
   return prices;
 }
 
-function parseCrypto(data: any): CryptoData | null {
+export function parseCrypto(data: any): CryptoData | null {
   if (!data) return null;
   const d = data.data || data;
   return {
@@ -189,7 +189,7 @@ function parseCrypto(data: any): CryptoData | null {
   };
 }
 
-function parseSentiment(data: any): SentimentData | null {
+export function parseSentiment(data: any): SentimentData | null {
   if (!data) return null;
   if (data.overall) {
     return {
@@ -218,7 +218,7 @@ function parseSentiment(data: any): SentimentData | null {
   return null;
 }
 
-function parseNews(data: any): NewsSignals | null {
+export function parseNews(data: any): NewsSignals | null {
   if (!data) return null;
   const keywords: Record<string, number> = {
     recession: 0, layoff: 0, crash: 0, crisis: 0, war: 0,
