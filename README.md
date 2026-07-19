@@ -11,7 +11,6 @@
 ![Vite](https://img.shields.io/badge/Vite-5-purple.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
@@ -93,4 +92,4 @@ cd DragonScope && node server/dataServer.js
 
 ## License
 
-MIT
+Source-available, not open source. See [LICENSE.md](LICENSE.md) for what is permitted.
