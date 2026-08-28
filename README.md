@@ -1,3 +1,6 @@
+![tests](https://github.com/beepboop2025/ReadyState/actions/workflows/tests.yml/badge.svg)
+![coverage](https://img.shields.io/badge/coverage-84%25-brightgreen)
+
 <!-- textura-banner -->
 <div align="center">
   <a href="https://github.com/beepboop2025/ReadyState"><img src="./banner.svg" width="100%" alt="ReadyState" /></a>

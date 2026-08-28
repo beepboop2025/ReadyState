@@ -93,7 +93,7 @@ export function useThreatLevel(): ThreatHookResult {
 
 // ─── Threat Computation Engine ─────────────────────────────────────
 
-function computeAllThreats(signals: MarketSignals): ThreatData {
+export function computeAllThreats(signals: MarketSignals): ThreatData {
   const overallEnvironment = computeOverallEnvironment(signals);
 
   return {
@@ -113,7 +113,7 @@ function computeAllThreats(signals: MarketSignals): ThreatData {
   };
 }
 
-function computeOverallEnvironment(signals: MarketSignals): OverallThreat {
+export function computeOverallEnvironment(signals: MarketSignals): OverallThreat {
   const { economic, fearGreed, bonds, sentiment, newsSignals } = signals;
   let score = 30;
   const factors: ThreatFactor[] = [];
@@ -348,11 +348,11 @@ function computeRelocationThreat(news: NewsSignals | null, economic: EconomicDat
 
 // ─── Utilities ────────────────────────────────────────────────────
 
-function clamp(val: number, min: number, max: number): number {
+export function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, Math.round(val)));
 }
 
-function threatLabel(score: number): ThreatLabel {
+export function threatLabel(score: number): ThreatLabel {
   if (score >= THREAT_THRESHOLDS.CRITICAL) return 'Critical';
   if (score >= THREAT_THRESHOLDS.ELEVATED) return 'Elevated';
   if (score >= THREAT_THRESHOLDS.MODERATE) return 'Moderate';
